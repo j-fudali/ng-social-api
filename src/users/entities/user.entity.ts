@@ -1,5 +1,10 @@
-import { Exclude } from 'class-transformer'
-export class UserEntity {
+import { Exclude, Transform } from 'class-transformer'
+import { Types } from 'mongoose'
+import { BaseEntity } from 'src/shared/entities/base.entity'
+
+export class UserEntity extends BaseEntity {
+    @Exclude()
+    _id: Types.ObjectId
     username: string
     firstname: string
     lastname: string
@@ -10,15 +15,9 @@ export class UserEntity {
     password: string
     @Exclude()
     hash: string
-    @Exclude()
-    createdAt: Date
-    @Exclude()
-    updatedAt: Date
-    @Exclude()
-    __v: number
-    @Exclude()
-    _id: string
+
     constructor(partial: Partial<UserEntity>) {
+        super()
         Object.assign(this, partial)
     }
 }

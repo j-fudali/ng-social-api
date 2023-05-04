@@ -29,6 +29,7 @@ export class AuthService {
         }
     }
     register(userData: any) {
-        return this.usersService.createUser(userData)
+        this.usersService.createUser(userData)
     }
 }
+

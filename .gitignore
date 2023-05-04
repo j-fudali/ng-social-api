@@ -36,3 +36,6 @@ lerna-debug.log*
 
 #Environments variables
 .env
+
+#Files
+/postsFiles
