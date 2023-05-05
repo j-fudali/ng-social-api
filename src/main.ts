@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { ConfigService } from '@nestjs/config'
 import { ValidationPipe } from '@nestjs/common'
-import { MongooseErrorsFilter } from './shared/filters/mongoose-errors.filter'
+import { MongooseErrorsFilter } from './common/filters/mongoose-errors.filter'
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { logger: ['log'] })
@@ -13,4 +13,3 @@ async function bootstrap() {
     await app.listen(port)
 }
 bootstrap()
-

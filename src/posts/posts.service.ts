@@ -11,10 +11,14 @@ import * as fs from 'fs'
 import { InjectModel } from '@nestjs/mongoose'
 import { Post } from 'src/common/schemas/post.schema'
 import { Model } from 'mongoose'
+import { Reaction } from 'src/common/schemas/reaction.schema'
 
 @Injectable()
 export class PostsService {
-    constructor(@InjectModel(Post.name) private postModel: Model<Post>) {}
+    constructor(
+        @InjectModel(Post.name) private postModel: Model<Post>,
+        @InjectModel(Reaction.name) private reactionModel: Model<Reaction>,
+    ) {}
     async create(
         userId: string,
         createPostDto: CreatePostDto,
@@ -30,25 +34,26 @@ export class PostsService {
             throw new UnprocessableEntityException()
         }
     }
-
     findAll() {
-        return this.postModel.find().lean().exec()
+        return this.postModel.find().populate('author').lean().exec()
     }
-
     async findOne(id: string) {
         try {
-            const post = await this.postModel.findById(id).lean()
+            const post = await this.postModel
+                .findById(id)
+                .populate('author')
+                .lean()
             if (!post) throw new NotFoundException('Post not found')
             return post
         } catch {
             throw new NotFoundException('Post not found')
         }
     }
-
     async update(id: string, updatePostDto: UpdatePostDto) {
         try {
             const req = await this.postModel
-                .findByIdAndUpdate(id, updatePostDto, { $new: true })
+                .findByIdAndUpdate(id, updatePostDto, { new: true })
+                .populate('author')
                 .lean()
             if (!req) throw new NotFoundException('Post not found')
             return req
@@ -56,14 +61,14 @@ export class PostsService {
             throw new NotFoundException('Post not found')
         }
     }
-
     async remove(id: string) {
-        try {
-            await this.postModel.findByIdAndDelete(id)
-            return { message: 'Post has been deleted' }
-        } catch (error) {
-            throw new NotFoundException('Post not found')
-        }
+        const deletedPost = await this.postModel.findByIdAndDelete(id)
+        if (!deletedPost) throw new NotFoundException('Post not found')
+        await this.reactionModel.deleteMany({
+            reactionFor: 'Post',
+            reactionPlaceId: deletedPost.id,
+        })
+        return { message: 'Post has been deleted' }
     }
     async uploadFiles(files: Express.Multer.File[], postId: string) {
         for (const file of files) {
@@ -116,4 +121,3 @@ export class PostsService {
         }
     }
 }
-

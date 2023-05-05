@@ -30,6 +30,7 @@ export class UsersService {
         })
         if (!req) throw new BadRequestException()
         await req.save()
+        return { message: 'User has been created' }
     }
 
     async updateUser(id: string, userData: UpdateUserDto) {

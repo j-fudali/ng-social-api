@@ -1,9 +1,8 @@
 import { Exclude, Transform } from 'class-transformer'
 import { Types } from 'mongoose'
-import { BaseEntity } from 'src/shared/entities/base.entity'
+import { BaseEntity } from 'src/common/entities/base.entity'
 
 export class UserEntity extends BaseEntity {
-    @Exclude()
     _id: Types.ObjectId
     username: string
     firstname: string

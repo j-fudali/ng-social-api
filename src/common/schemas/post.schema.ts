@@ -7,9 +7,9 @@ export type PostDocument = HydratedDocument<Post>
 @Schema()
 class ReactionsNumber {
     @Prop({ default: 0 })
-    likeNumber: number
+    likesNumber: number
     @Prop({ default: 0 })
-    dislikeNumber: number
+    dislikesNumber: number
 }
 @Schema()
 class PostFile {
@@ -30,7 +30,10 @@ export class Post {
     author: User
     @Prop({ type: [String] })
     categories: string[]
-    @Prop({ type: ReactionsNumber })
-    reactionNumber: ReactionsNumber
+    @Prop({
+        type: ReactionsNumber,
+        default: {},
+    })
+    reactionsNumber: ReactionsNumber
 }
 export const PostSchema = SchemaFactory.createForClass(Post)

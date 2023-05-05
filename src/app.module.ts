@@ -6,7 +6,9 @@ import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.module'
 import { PostsModule } from './posts/posts.module'
 import { APP_FILTER } from '@nestjs/core'
-import { MongooseErrorsFilter } from './shared/filters/mongoose-errors.filter'
+import { ReactionsModule } from './reactions/reactions.module'
+import { MongooseErrorsFilter } from './common/filters/mongoose-errors.filter'
+import { FriendshipsModule } from './friendships/friendships.module'
 
 @Module({
     providers: [
@@ -23,8 +25,9 @@ import { MongooseErrorsFilter } from './shared/filters/mongoose-errors.filter'
         AuthModule,
         UsersModule,
         PostsModule,
+        ReactionsModule,
+        FriendshipsModule,
     ],
     controllers: [AppController],
 })
 export class AppModule {}
-

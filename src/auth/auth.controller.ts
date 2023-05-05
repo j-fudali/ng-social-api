@@ -9,15 +9,13 @@ import {
 import { LocalAuthGuard } from './guards/local-auth.guard'
 import { AuthService } from './auth.service'
 import { CreateUserDto } from 'src/users/dto/create-user.dto'
-
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) {}
 
     @Post('register')
     register(@Body() body: CreateUserDto) {
-        this.authService.register(body)
-        return { message: 'User has been created' }
+        return this.authService.register(body)
     }
     @UseGuards(LocalAuthGuard)
     @HttpCode(200)

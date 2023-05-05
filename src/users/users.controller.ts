@@ -15,6 +15,7 @@ import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { UsersService } from './users.service'
 import { UserEntity } from './entities/user.entity'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { IsUserAuthorGuard } from 'src/common/guards/is-user-author.guard'
 
 @Controller('users')
 export class UsersController {
@@ -28,9 +29,9 @@ export class UsersController {
         ).toObject()
         return new UserEntity(user)
     }
+    @Patch('profile/update')
     @UseGuards(JwtStrategyGuard)
     @UseInterceptors(ClassSerializerInterceptor)
-    @Patch('profile/update')
     async updateUser(@Request() req, @Body() body: UpdateUserDto) {
         if (!req.user.userId || !body) throw new BadRequestException()
         return new UserEntity(
