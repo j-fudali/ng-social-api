@@ -10,7 +10,6 @@ import {
     Query,
     UseInterceptors,
     ClassSerializerInterceptor,
-    Param,
 } from '@nestjs/common'
 import { FriendshipsService } from './friendships.service'
 import { CreateFriendshipDto } from './dto/create-friendship.dto'
@@ -56,4 +55,3 @@ export class FriendshipsController {
         return this.friendshipsService.remove(req.user.userId, params)
     }
 }
-

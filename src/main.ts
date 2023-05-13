@@ -8,8 +8,9 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule, { logger: ['log'] })
     const configService = app.get(ConfigService)
     const port = configService.get('PORT')
-    app.useGlobalPipes(new ValidationPipe())
     app.useGlobalFilters(new MongooseErrorsFilter())
+    app.useGlobalPipes(new ValidationPipe())
     await app.listen(port)
 }
 bootstrap()
+

@@ -9,6 +9,11 @@ import { APP_FILTER } from '@nestjs/core'
 import { ReactionsModule } from './reactions/reactions.module'
 import { MongooseErrorsFilter } from './common/filters/mongoose-errors.filter'
 import { FriendshipsModule } from './friendships/friendships.module'
+import { CommentsModule } from './comments/comments.module'
+import { ConversationsModule } from './conversations/conversations.module'
+import { MessagesModule } from './messages/messages.module'
+import { InvitationsModule } from './invitations/invitations.module'
+import { FilesUploadModule } from './files-upload/files-upload.module'
 
 @Module({
     providers: [
@@ -27,7 +32,13 @@ import { FriendshipsModule } from './friendships/friendships.module'
         PostsModule,
         ReactionsModule,
         FriendshipsModule,
+        CommentsModule,
+        ConversationsModule,
+        MessagesModule,
+        InvitationsModule,
+        FilesUploadModule,
     ],
     controllers: [AppController],
 })
 export class AppModule {}
+

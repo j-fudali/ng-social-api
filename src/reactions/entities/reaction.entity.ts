@@ -5,7 +5,6 @@ import { BaseEntity } from 'src/common/entities/base.entity'
 import { UserEntity } from 'src/users/entities/user.entity'
 
 export class ReactionEntity extends BaseEntity {
-    @Expose()
     _id: Types.ObjectId
     reaction: string
     @Type(() => UserEntity)

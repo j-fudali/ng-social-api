@@ -10,10 +10,30 @@ import { User } from 'src/common/schemas/user.schema'
 import * as bcrypt from 'bcrypt'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { CreateUserDto } from './dto/create-user.dto'
+import { GetVisibleUsersDto } from './dto/get-visible-users.dto'
 
 @Injectable()
 export class UsersService {
     constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+    async getVisibleUsers(getVisibleUsers: GetVisibleUsersDto) {
+        let query = this.userModel.find()
+        if (
+            getVisibleUsers.firstname ||
+            getVisibleUsers.lastname ||
+            getVisibleUsers.username
+        ) {
+            query = query.find().or([
+                { username: getVisibleUsers.username },
+                {
+                    firstname: getVisibleUsers.firstname,
+                    lastname: getVisibleUsers.lastname,
+                },
+            ])
+        }
+        return query.lean().exec()
+    }
+
     async getUser(username: string) {
         const user = await this.userModel.findOne({ username }).exec()
         if (!user) throw new NotFoundException()

@@ -134,4 +134,3 @@ export class FriendshipsService {
         return { message: 'Friendship has been deleted' }
     }
 }
-

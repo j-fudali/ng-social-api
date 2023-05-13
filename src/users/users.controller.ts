@@ -8,18 +8,27 @@ import {
     UseInterceptors,
     ClassSerializerInterceptor,
     Body,
-    NotFoundException,
     BadRequestException,
 } from '@nestjs/common'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { UsersService } from './users.service'
 import { UserEntity } from './entities/user.entity'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { IsUserAuthorGuard } from 'src/common/guards/is-user-author.guard'
+import { GetVisibleUsersDto } from './dto/get-visible-users.dto'
+import { PublicUserEntity } from 'src/common/entities/public-user-entity'
 
 @Controller('users')
 export class UsersController {
     constructor(private usersService: UsersService) {}
+
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Get()
+    async getVisibleUsers(@Body() getVisibleUsers: GetVisibleUsersDto) {
+        return (await this.usersService.getVisibleUsers(getVisibleUsers)).map(
+            (u) => new PublicUserEntity(u),
+        )
+    }
+
     @UseGuards(JwtStrategyGuard)
     @UseInterceptors(ClassSerializerInterceptor)
     @Get('profile')

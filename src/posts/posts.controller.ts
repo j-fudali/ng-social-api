@@ -88,4 +88,3 @@ export class PostsController {
         return this.postsService.uploadFiles(files, id)
     }
 }
-

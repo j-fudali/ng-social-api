@@ -3,26 +3,17 @@ import { Types } from 'mongoose'
 import { User } from 'src/common/schemas/user.schema'
 import { BaseEntity } from 'src/common/entities/base.entity'
 import { UserEntity } from 'src/users/entities/user.entity'
-export class PostFile {
-    url: string
-    hash: string
-    @Exclude()
-    _id?: Types.ObjectId
-}
-export class ReactionsNumber {
-    likesNumber: number
-    dislikesNumber: number
-    @Exclude()
-    _id?: Types.ObjectId
-}
+import { ReactionsNumber } from 'src/common/entities/reactions-number.entity'
+import { File } from 'src/common/entities/file.entity'
+
 export class PostEntity extends BaseEntity {
     title: string
     text: string
     @Type(() => UserEntity)
     author: User
     categories: string[]
-    @Type(() => PostFile)
-    files: PostFile[]
+    @Type(() => File)
+    files: File[]
     @Type(() => ReactionsNumber)
     reactionsNumber: ReactionsNumber
     constructor(partial: Partial<PostEntity>) {

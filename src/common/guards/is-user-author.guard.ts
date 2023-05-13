@@ -10,14 +10,14 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { Post } from 'src/common/schemas/post.schema'
 import { Reaction } from 'src/common/schemas/reaction.schema'
-import { PostsController } from 'src/posts/posts.controller'
-import { ReactionsController } from 'src/reactions/reactions.controller'
+import { Comment } from '../schemas/comment.schema'
 
 @Injectable()
 export class IsUserAuthorGuard implements CanActivate {
     constructor(
         @InjectModel(Post.name) private postModel: Model<Post>,
         @InjectModel(Reaction.name) private reactionModel: Model<Reaction>,
+        @InjectModel(Comment.name) private commentModel: Model<Comment>,
     ) {}
     async canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest()
@@ -36,6 +36,22 @@ export class IsUserAuthorGuard implements CanActivate {
             try {
                 const req = await this.reactionModel.findById(paramId)
                 if (!req) throw new NotFoundException('Reaction not found')
+                return req.author.toString() === userId ? true : false
+            } catch (error) {
+                throw new BadRequestException('Invalid data provided')
+            }
+        } else if (path.includes('comments')) {
+            try {
+                const req = await this.commentModel.findById(paramId)
+                if (!req) throw new NotFoundException('Comment not found')
+                return req.author.toString() === userId ? true : false
+            } catch (error) {
+                throw new BadRequestException('Invalid data provided')
+            }
+        } else if (path.includes('messages')) {
+            try {
+                const req = await this.commentModel.findById(paramId)
+                if (!req) throw new NotFoundException('Comment not found')
                 return req.author.toString() === userId ? true : false
             } catch (error) {
                 throw new BadRequestException('Invalid data provided')

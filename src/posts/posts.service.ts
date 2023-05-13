@@ -1,23 +1,24 @@
 import {
-    ConflictException,
     Injectable,
     NotFoundException,
     UnprocessableEntityException,
 } from '@nestjs/common'
 import { CreatePostDto } from './dto/create-post.dto'
 import { UpdatePostDto } from './dto/update-post.dto'
-import { createHash } from 'crypto'
-import * as fs from 'fs'
 import { InjectModel } from '@nestjs/mongoose'
 import { Post } from 'src/common/schemas/post.schema'
 import { Model } from 'mongoose'
 import { Reaction } from 'src/common/schemas/reaction.schema'
+import { Comment } from 'src/common/schemas/comment.schema'
+import { FilesUploadService } from 'src/files-upload/files-upload.service'
 
 @Injectable()
 export class PostsService {
     constructor(
         @InjectModel(Post.name) private postModel: Model<Post>,
         @InjectModel(Reaction.name) private reactionModel: Model<Reaction>,
+        @InjectModel(Comment.name) private commentModel: Model<Comment>,
+        private filesUploadService: FilesUploadService,
     ) {}
     async create(
         userId: string,
@@ -50,16 +51,12 @@ export class PostsService {
         }
     }
     async update(id: string, updatePostDto: UpdatePostDto) {
-        try {
-            const req = await this.postModel
-                .findByIdAndUpdate(id, updatePostDto, { new: true })
-                .populate('author')
-                .lean()
-            if (!req) throw new NotFoundException('Post not found')
-            return req
-        } catch {
-            throw new NotFoundException('Post not found')
-        }
+        const req = await this.postModel
+            .findByIdAndUpdate(id, updatePostDto, { new: true })
+            .populate('author')
+            .lean()
+        if (!req) throw new NotFoundException('Post not found')
+        return req
     }
     async remove(id: string) {
         const deletedPost = await this.postModel.findByIdAndDelete(id)
@@ -68,56 +65,13 @@ export class PostsService {
             reactionFor: 'Post',
             reactionPlaceId: deletedPost.id,
         })
+        await this.commentModel.deleteMany({
+            post: deletedPost.id,
+        })
         return { message: 'Post has been deleted' }
     }
     async uploadFiles(files: Express.Multer.File[], postId: string) {
-        for (const file of files) {
-            const buffer = file.buffer
-            const checksum = createHash('sha256').update(buffer).digest('hex')
-            const searchedFile = await this.postModel
-                .find({
-                    'files.hash': checksum,
-                })
-                .exec()
-            if (searchedFile.find((f) => f.id === postId))
-                throw new ConflictException(
-                    'Post already has one or more provided files',
-                )
-            if (!(searchedFile.length > 0)) {
-                const filename = `${Date.now()}_${file.originalname}`
-                const postsFilesFolder = './postsFiles'
-                const uploadFolder = `${postsFilesFolder}/${filename}`
-                const postFile: { url: string; hash: string } = {
-                    url: uploadFolder,
-                    hash: checksum,
-                }
-                const postToAddFiles = await this.postModel.findByIdAndUpdate(
-                    postId,
-                    {
-                        $push: { files: postFile },
-                    },
-                )
-                if (!postToAddFiles) {
-                    throw new NotFoundException('Post not found')
-                }
-                fs.writeFileSync(uploadFolder, buffer)
-                continue
-            }
-            const foundedFile = searchedFile[0].files.find(
-                (f) => f.hash === checksum,
-            )
-            try {
-                await this.postModel.findByIdAndUpdate(postId, {
-                    $push: {
-                        files: {
-                            url: foundedFile.url,
-                            hash: foundedFile.hash,
-                        },
-                    },
-                })
-            } catch (error) {
-                throw new NotFoundException('Post not found')
-            }
-        }
+        return this.filesUploadService.uploadFilesPosts(files, postId)
     }
 }
+

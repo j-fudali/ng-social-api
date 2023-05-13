@@ -1,6 +1,5 @@
 import {
     ArgumentsHost,
-    BadRequestException,
     Catch,
     ConflictException,
     ExceptionFilter,
@@ -12,7 +11,6 @@ export class MongooseErrorsFilter implements ExceptionFilter {
     catch(exception: MongoError, host: ArgumentsHost) {
         const ctx = host.switchToHttp()
         const response = ctx.getResponse<Response>()
-        console.log(exception)
         switch (exception.code) {
             case 11000:
                 response

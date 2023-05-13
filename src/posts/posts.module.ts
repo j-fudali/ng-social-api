@@ -6,6 +6,8 @@ import { memoryStorage } from 'multer'
 import { MongooseModule } from '@nestjs/mongoose'
 import { Post, PostSchema } from 'src/common/schemas/post.schema'
 import { Reaction, ReactionSchema } from 'src/common/schemas/reaction.schema'
+import { Comment, CommentSchema } from 'src/common/schemas/comment.schema'
+import { FilesUploadModule } from 'src/files-upload/files-upload.module'
 
 @Module({
     imports: [
@@ -15,10 +17,12 @@ import { Reaction, ReactionSchema } from 'src/common/schemas/reaction.schema'
         MongooseModule.forFeature([
             { name: Reaction.name, schema: ReactionSchema },
             { name: Post.name, schema: PostSchema },
-            //Message schema
+            { name: Comment.name, schema: CommentSchema },
         ]),
+        FilesUploadModule,
     ],
     controllers: [PostsController],
     providers: [PostsService],
 })
 export class PostsModule {}
+
