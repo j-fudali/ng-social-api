@@ -9,12 +9,11 @@ export class FriendshipEntity extends BaseEntity {
     _id: Types.ObjectId
     status: string
     @Type(() => UserEntity)
-    requester: User
+    requester: UserEntity
     @Type(() => UserEntity)
-    recipient: User
+    recipient: UserEntity
     constructor(partial: Partial<FriendshipEntity>) {
         super()
         Object.assign(this, partial)
     }
 }
-

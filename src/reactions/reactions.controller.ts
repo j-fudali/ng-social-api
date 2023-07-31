@@ -17,7 +17,7 @@ import { UpdateReactionDto } from './dto/update-reaction.dto'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { ReactionEntity } from './entities/reaction.entity'
 import { GetRelatedReactions } from './dto/get-related-reactions.dto'
-import { IsUserAuthorGuard } from 'src/common/guards/is-user-author.guard'
+import { IsUserReactionAuthorGuard } from './guards/is-user-reaction-author.guard'
 
 @Controller('reactions')
 export class ReactionsController {
@@ -42,7 +42,7 @@ export class ReactionsController {
         ).map((reaction) => new ReactionEntity(reaction))
     }
     @Patch(':id')
-    @UseGuards(JwtStrategyGuard, IsUserAuthorGuard)
+    @UseGuards(JwtStrategyGuard, IsUserReactionAuthorGuard)
     update(
         @Param('id') id: string,
         @Body() updateReactionDto: UpdateReactionDto,
@@ -51,7 +51,7 @@ export class ReactionsController {
     }
 
     @Delete(':id')
-    @UseGuards(JwtStrategyGuard, IsUserAuthorGuard)
+    @UseGuards(JwtStrategyGuard, IsUserReactionAuthorGuard)
     remove(@Param('id') id: string) {
         return this.reactionsService.remove(id)
     }

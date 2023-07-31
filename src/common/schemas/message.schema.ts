@@ -13,7 +13,7 @@ export class Message {
         required: true,
     })
     conversation: Conversation
-    @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' })
     author: User
     @Prop({ required: true })
     text: string

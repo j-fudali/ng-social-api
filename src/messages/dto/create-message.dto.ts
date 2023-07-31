@@ -6,5 +6,5 @@ export class CreateMessageDto {
     text: string
     @IsNotEmpty()
     @IsMongoId()
-    conversationId: string
+    conversation: string
 }

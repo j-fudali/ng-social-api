@@ -17,7 +17,7 @@ export class IsParticipantGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest()
         const userId = request.user.userId
-        const conversationId = request.params.id
+        const conversationId = request.params.id || request.body.conversation
         try {
             const conversation = await this.conversationModel.findById(
                 conversationId,

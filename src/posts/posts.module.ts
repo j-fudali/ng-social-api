@@ -7,7 +7,6 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { Post, PostSchema } from 'src/common/schemas/post.schema'
 import { Reaction, ReactionSchema } from 'src/common/schemas/reaction.schema'
 import { Comment, CommentSchema } from 'src/common/schemas/comment.schema'
-import { FilesUploadModule } from 'src/files-upload/files-upload.module'
 
 @Module({
     imports: [
@@ -19,10 +18,8 @@ import { FilesUploadModule } from 'src/files-upload/files-upload.module'
             { name: Post.name, schema: PostSchema },
             { name: Comment.name, schema: CommentSchema },
         ]),
-        FilesUploadModule,
     ],
     controllers: [PostsController],
     providers: [PostsService],
 })
 export class PostsModule {}
-

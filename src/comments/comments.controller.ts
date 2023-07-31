@@ -19,9 +19,9 @@ import { CreateCommentDto } from './dto/create-comment.dto'
 import { UpdateCommentDto } from './dto/update-comment.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
-import { IsUserAuthorGuard } from 'src/common/guards/is-user-author.guard'
 import { GetCommentsRelatedToPostDto } from './dto/get-comments-related-to-post.dto'
 import { CommentEntity, SingleCommentEntity } from './entities/comment.entity'
+import { IsUserCommentAuthorGuard } from './guards/is-user-comment-author.guard'
 @Controller('comments')
 export class CommentsController {
     constructor(private readonly commentsService: CommentsService) {}
@@ -46,7 +46,7 @@ export class CommentsController {
 
     @Patch(':id')
     @UseInterceptors(ClassSerializerInterceptor)
-    @UseGuards(JwtStrategyGuard, IsUserAuthorGuard)
+    @UseGuards(JwtStrategyGuard, IsUserCommentAuthorGuard)
     async update(
         @Param('id') id: string,
         @Body() updateCommentDto: UpdateCommentDto,
@@ -57,13 +57,13 @@ export class CommentsController {
     }
 
     @Delete(':id')
-    @UseGuards(JwtStrategyGuard, IsUserAuthorGuard)
+    @UseGuards(JwtStrategyGuard, IsUserCommentAuthorGuard)
     remove(@Param('id') id: string) {
         return this.commentsService.remove(id)
     }
 
     @Post(':id/upload')
-    @UseGuards(JwtStrategyGuard, IsUserAuthorGuard)
+    @UseGuards(JwtStrategyGuard, IsUserCommentAuthorGuard)
     @UseInterceptors(FileInterceptor('image'))
     uploadImages(
         @Param('id') id: string,
@@ -82,4 +82,3 @@ export class CommentsController {
         return this.commentsService.uploadImage(image, id)
     }
 }
-

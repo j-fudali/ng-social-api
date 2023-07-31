@@ -13,7 +13,7 @@ import { CommentsModule } from './comments/comments.module'
 import { ConversationsModule } from './conversations/conversations.module'
 import { MessagesModule } from './messages/messages.module'
 import { InvitationsModule } from './invitations/invitations.module'
-import { FilesUploadModule } from './files-upload/files-upload.module'
+import { GroupsModule } from './groups/groups.module'
 
 @Module({
     providers: [
@@ -23,6 +23,7 @@ import { FilesUploadModule } from './files-upload/files-upload.module'
         },
     ],
     imports: [
+        GroupsModule,
         ConfigModule.forRoot(),
         MongooseModule.forRoot(process.env.DB_URI, {
             dbName: 'ngSocial',
@@ -36,9 +37,7 @@ import { FilesUploadModule } from './files-upload/files-upload.module'
         ConversationsModule,
         MessagesModule,
         InvitationsModule,
-        FilesUploadModule,
     ],
     controllers: [AppController],
 })
 export class AppModule {}
-

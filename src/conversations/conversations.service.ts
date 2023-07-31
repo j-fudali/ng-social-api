@@ -41,15 +41,6 @@ export class ConversationsService {
             .lean()
             .exec()
     }
-
-    // async findOne(id: string) {
-    //     try {
-    //         return await this.conversationModel.findById(id).lean().exec()
-    //     } catch {
-    //         throw new NotFoundException('Conversation not found')
-    //     }
-    // }
-
     async update(id: string, updateConversationDto: UpdateConversationDto) {
         const conversation = await this.conversationModel.findByIdAndUpdate(
             id,
@@ -65,4 +56,3 @@ export class ConversationsService {
         return { message: 'Conversation deleted' }
     }
 }
-

@@ -1,7 +1,7 @@
 import { IsMongoId, IsNotEmpty } from 'class-validator'
 
-export class AcceptFriendshipDto {
+export class FindAllInConversation {
     @IsNotEmpty()
     @IsMongoId()
-    requester: string
+    conversationId: string
 }

@@ -1,11 +1,4 @@
-import {
-    IsEmail,
-    IsNotEmpty,
-    IsNumberString,
-    IsPhoneNumber,
-    Length,
-    MaxLength,
-} from 'class-validator'
+import { IsBoolean, IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator'
 
 export class CreateUserDto {
     @IsNotEmpty()
@@ -24,4 +17,7 @@ export class CreateUserDto {
     @IsNotEmpty()
     @IsPhoneNumber('PL')
     phone: string
+    @IsNotEmpty()
+    @IsBoolean()
+    isVisible: boolean
 }

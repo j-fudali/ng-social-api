@@ -1,7 +1,7 @@
 import { Exclude } from 'class-transformer'
 import { Types } from 'mongoose'
 
-export class File {
+export class FileEntity {
     url: string
     hash: string
     @Exclude()

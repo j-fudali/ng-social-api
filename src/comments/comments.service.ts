@@ -1,6 +1,5 @@
 import {
     BadRequestException,
-    Body,
     ConflictException,
     Injectable,
     NotFoundException,
@@ -113,4 +112,3 @@ export class CommentsService {
         }
     }
 }
-

@@ -25,4 +25,3 @@ export class ConversationInInvitation extends ConversationEntity {
         Object.assign(this, partial)
     }
 }
-

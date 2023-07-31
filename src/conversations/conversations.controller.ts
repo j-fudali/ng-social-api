@@ -15,23 +15,26 @@ import { ConversationsService } from './conversations.service'
 import { CreateConversationDto } from './dto/create-conversation.dto'
 import { UpdateConversationDto } from './dto/update-conversation.dto'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
-import { IsParticipantGuard } from './guards/is-participant.guard'
 import { ConversationEntity } from '../common/dto/conversation.entity'
+import { IsUserConversationAuthorGuard } from './guards/is-user-conversation-author.guard'
 
 @Controller('conversations')
 @UseGuards(JwtStrategyGuard)
 export class ConversationsController {
     constructor(private readonly conversationsService: ConversationsService) {}
     @Post()
-    async create(
+    create(
         @Request() req,
         @Body() createConversationDto: CreateConversationDto,
     ) {
-        return await this.conversationsService.create(
+        return this.conversationsService.create(
             req.user.userId,
             createConversationDto,
         )
     }
+    //TODO Invitations to conversations
+    // @Post(':id')
+    // addToConversation() {}
 
     @Get()
     @UseInterceptors(ClassSerializerInterceptor)
@@ -42,13 +45,9 @@ export class ConversationsController {
             )
         ).map((c) => new ConversationEntity(c))
     }
-    @Get(':id')
-    @UseGuards(IsParticipantGuard)
-    findOne(@Request() req) {
-        // return this.conversationsService.findOne(id)
-        return req.conversation
-    }
+
     @Patch(':id')
+    @UseInterceptors(IsUserConversationAuthorGuard)
     async update(
         @Param('id') id: string,
         @Body() updateConversationDto: UpdateConversationDto,
@@ -56,8 +55,8 @@ export class ConversationsController {
         return await this.conversationsService.update(id, updateConversationDto)
     }
     @Delete(':id')
+    @UseInterceptors(IsUserConversationAuthorGuard)
     async remove(@Param('id') id: string) {
         return await this.conversationsService.remove(+id)
     }
 }
-

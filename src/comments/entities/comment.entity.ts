@@ -1,9 +1,10 @@
 import { Exclude, Transform, Type } from 'class-transformer'
 import { Types } from 'mongoose'
 import { BaseEntity } from 'src/common/entities/base.entity'
-import { File } from 'src/common/entities/file.entity'
+import { FileEntity } from 'src/common/entities/file.entity'
 import { ReactionsNumber } from 'src/common/entities/reactions-number.entity'
 import { Post } from 'src/common/schemas/post.schema'
+import { File } from 'src/common/schemas/shared/file.schema'
 import { User } from 'src/common/schemas/user.schema'
 import { UserEntity } from 'src/users/entities/user.entity'
 
@@ -16,7 +17,7 @@ export class CommentEntity extends BaseEntity {
     author: User
     @Exclude()
     post: Post
-    @Type(() => File)
+    @Type(() => FileEntity)
     image: File
     constructor(partial: Partial<CommentEntity>) {
         super()

@@ -8,31 +8,32 @@ import {
     UseInterceptors,
     ClassSerializerInterceptor,
     Body,
-    BadRequestException,
+    Query,
+    NotFoundException,
 } from '@nestjs/common'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { UsersService } from './users.service'
 import { UserEntity } from './entities/user.entity'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { GetVisibleUsersDto } from './dto/get-visible-users.dto'
-import { PublicUserEntity } from 'src/common/entities/public-user-entity'
+import { PaginationParams } from 'src/common/dto/pagination-params'
 
 @Controller('users')
 export class UsersController {
     constructor(private usersService: UsersService) {}
 
-    @UseInterceptors(ClassSerializerInterceptor)
     @Get()
-    async getVisibleUsers(@Body() getVisibleUsers: GetVisibleUsersDto) {
-        return (await this.usersService.getVisibleUsers(getVisibleUsers)).map(
-            (u) => new PublicUserEntity(u),
-        )
+    @UseInterceptors(ClassSerializerInterceptor)
+    async getVisibleUsers(
+        @Query() { skip, limit }: PaginationParams,
+        @Body() body: { search: string },
+    ) {
+        return await this.usersService.getVisibleUsers(body.search, skip, limit)
     }
 
+    @Get('profile')
     @UseGuards(JwtStrategyGuard)
     @UseInterceptors(ClassSerializerInterceptor)
-    @Get('profile')
-    async getUser(@Request() req) {
+    async getUserProfile(@Request() req) {
         const user = (
             await this.usersService.getUser(req.user.username)
         ).toObject()
@@ -42,17 +43,17 @@ export class UsersController {
     @UseGuards(JwtStrategyGuard)
     @UseInterceptors(ClassSerializerInterceptor)
     async updateUser(@Request() req, @Body() body: UpdateUserDto) {
-        if (!req.user.userId || !body) throw new BadRequestException()
+        if (!req.user.userId)
+            throw new NotFoundException('Cannot find user profile')
         return new UserEntity(
             await this.usersService.updateUser(req.user.userId, body),
         )
     }
-    @UseGuards(JwtStrategyGuard)
     @Delete('profile/delete')
+    @UseGuards(JwtStrategyGuard)
     async deleteUser(@Request() req) {
-        if (req.user.userId) throw new BadRequestException()
-        await this.usersService.deleteUser(req.user.userId)
-        return { message: 'User has been deleted' }
+        if (!req.user.userId)
+            throw new NotFoundException('Cannot find user profile')
+        return await this.usersService.deleteUser(req.user.userId)
     }
 }
-

@@ -5,4 +5,3 @@ export class RemoveFriendshipDto {
     @IsMongoId()
     secondUser: string
 }
-

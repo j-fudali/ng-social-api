@@ -9,8 +9,11 @@ async function bootstrap() {
     const configService = app.get(ConfigService)
     const port = configService.get('PORT')
     app.useGlobalFilters(new MongooseErrorsFilter())
-    app.useGlobalPipes(new ValidationPipe())
+    app.useGlobalPipes(
+        new ValidationPipe({
+            transform: true,
+        }),
+    )
     await app.listen(port)
 }
 bootstrap()
-
