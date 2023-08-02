@@ -1,16 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { HydratedDocument } from 'mongoose'
 import { User } from './user.schema'
-
-@Schema()
-class Roles {
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
-    administrator: User
-    @Prop({
-        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    })
-    moderators: User[]
-}
+import { Roles } from './shared/roles.schema'
 
 export type GroupDocument = HydratedDocument<Group>
 @Schema()

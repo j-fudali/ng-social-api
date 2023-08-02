@@ -2,17 +2,16 @@ import { Exclude, Transform, Type } from 'class-transformer'
 import { Types } from 'mongoose'
 import { BaseEntity } from 'src/common/entities/base.entity'
 import { FileEntity } from 'src/common/entities/file.entity'
-import { ReactionsNumber } from 'src/common/entities/reactions-number.entity'
+import { ReactionsNumberEntity } from 'src/common/entities/reactions-number.entity'
 import { Post } from 'src/common/schemas/post.schema'
 import { File } from 'src/common/schemas/shared/file.schema'
 import { User } from 'src/common/schemas/user.schema'
 import { UserEntity } from 'src/users/entities/user.entity'
 
 export class CommentEntity extends BaseEntity {
-    _id: Types.ObjectId
     text: string
-    @Type(() => ReactionsNumber)
-    reactionsNumber: ReactionsNumber
+    @Type(() => ReactionsNumberEntity)
+    reactionsNumber: ReactionsNumberEntity
     @Type(() => UserEntity)
     author: User
     @Exclude()
@@ -33,4 +32,3 @@ export class SingleCommentEntity extends CommentEntity {
         Object.assign(this, partial)
     }
 }
-

@@ -5,8 +5,6 @@ import {
     Request,
     Patch,
     Delete,
-    UseInterceptors,
-    ClassSerializerInterceptor,
     Body,
     Query,
     NotFoundException,
@@ -22,26 +20,20 @@ export class UsersController {
     constructor(private usersService: UsersService) {}
 
     @Get()
-    @UseInterceptors(ClassSerializerInterceptor)
-    async getVisibleUsers(
+    getVisibleUsers(
         @Query() { skip, limit }: PaginationParams,
-        @Body() body: { search: string },
-    ) {
-        return await this.usersService.getVisibleUsers(body.search, skip, limit)
+        @Body('search') search: string,
+    ): Promise<{ result: UserEntity[]; count: number }> {
+        return this.usersService.getVisibleUsers(search, skip, limit)
     }
 
     @Get('profile')
     @UseGuards(JwtStrategyGuard)
-    @UseInterceptors(ClassSerializerInterceptor)
-    async getUserProfile(@Request() req) {
-        const user = (
-            await this.usersService.getUser(req.user.username)
-        ).toObject()
-        return new UserEntity(user)
+    getUser(@Request() req): Promise<UserEntity> {
+        return this.usersService.getUser(req.user.username)
     }
     @Patch('profile/update')
     @UseGuards(JwtStrategyGuard)
-    @UseInterceptors(ClassSerializerInterceptor)
     async updateUser(@Request() req, @Body() body: UpdateUserDto) {
         if (!req.user.userId)
             throw new NotFoundException('Cannot find user profile')

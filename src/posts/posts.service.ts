@@ -8,11 +8,12 @@ import { CreatePostDto } from './dto/create-post.dto'
 import { UpdatePostDto } from './dto/update-post.dto'
 import { InjectModel } from '@nestjs/mongoose'
 import { Post } from 'src/common/schemas/post.schema'
-import { FilterQuery, Model } from 'mongoose'
+import { Model } from 'mongoose'
 import { Reaction } from 'src/common/schemas/reaction.schema'
 import { Comment } from 'src/common/schemas/comment.schema'
 import { createHash } from 'crypto'
 import * as fs from 'fs'
+import { PostEntity } from './entities/post.entity'
 @Injectable()
 export class PostsService {
     constructor(
@@ -32,20 +33,73 @@ export class PostsService {
             throw new UnprocessableEntityException('Cannot create new post')
         }
     }
-    async findAll() {
-        return await this.postModel.find().populate('author').lean().exec()
-    }
-    async findOne(id: string) {
+    async findAll(
+        search: string,
+        skip = 0,
+        limit = 4,
+    ): Promise<{ result: PostEntity[]; count: number }> {
         try {
-            const post = await this.postModel
-                .findById(id)
-                .populate('author')
-                .lean()
-            if (!post) throw new NotFoundException('Post not found')
-            return post
-        } catch {
-            throw new NotFoundException('Post not found')
+            const query = this.postModel.aggregate().search({
+                index: 'posts_search',
+                compound: {
+                    should: [
+                        {
+                            autocomplete: {
+                                path: 'title',
+                                query: search,
+                                tokenOrder: 'any',
+                                fuzzy: {
+                                    maxEdits: 2,
+                                    prefixLength: 1,
+                                    maxExpansions: 256,
+                                },
+                            },
+                        },
+                        {
+                            autocomplete: {
+                                path: 'text',
+                                query: search,
+                                tokenOrder: 'any',
+                                fuzzy: {
+                                    maxEdits: 2,
+                                    prefixLength: 1,
+                                    maxExpansions: 256,
+                                },
+                            },
+                        },
+                    ],
+                },
+            })
+            const count = (await query).length
+            const result = (
+                await query
+                    .skip(skip)
+                    .limit(limit)
+                    .lookup({
+                        from: 'users',
+                        localField: 'author',
+                        foreignField: '_id',
+                        as: 'author',
+                    })
+                    .unwind('$author')
+                    .project({
+                        title: 1,
+                        text: 1,
+                        files: 1,
+                        author: 1,
+                        createdAt: 1,
+                    })
+                    .exec()
+            ).map((p) => new PostEntity(p))
+            return { result, count }
+        } catch (err) {
+            console.log(err)
         }
+    }
+    async findOne(id: string): Promise<PostEntity> {
+        const post = await this.postModel.findById(id).populate('author').lean()
+        if (!post) throw new NotFoundException('Post not found')
+        return new PostEntity(post)
     }
     async update(id: string, updatePostDto: UpdatePostDto) {
         const req = await this.postModel
@@ -53,7 +107,7 @@ export class PostsService {
             .populate('author')
             .lean()
         if (!req) throw new NotFoundException('Post not found')
-        return req
+        return { message: 'Post has been updated' }
     }
     async remove(id: string) {
         const deletedPost = await this.postModel.findByIdAndDelete(id)
@@ -67,7 +121,7 @@ export class PostsService {
         })
         return { message: 'Post has been deleted' }
     }
-    async uploadFiles(files: Express.Multer.File[], documentId: string) {
+    async uploadFiles(files: Array<Express.Multer.File>, documentId: string) {
         for (const file of files) {
             const buffer = file.buffer
             const checksum = createHash('sha256').update(buffer).digest('hex')

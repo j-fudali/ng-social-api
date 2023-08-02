@@ -56,4 +56,3 @@ export class ReactionsController {
         return this.reactionsService.remove(id)
     }
 }
-

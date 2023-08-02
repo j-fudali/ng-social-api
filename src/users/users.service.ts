@@ -9,6 +9,7 @@ import { User } from 'src/common/schemas/user.schema'
 import * as bcrypt from 'bcrypt'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { CreateUserDto } from './dto/create-user.dto'
+import { UserEntity } from './entities/user.entity'
 
 @Injectable()
 export class UsersService {
@@ -16,85 +17,63 @@ export class UsersService {
 
     async getVisibleUsers(
         search: string,
-        documentsToSkip = 0,
-        limitOfDocuments?: number,
-    ) {
-        try {
-            //Rewrite using facet pipeline
-            const query = this.userModel
-                .aggregate()
-                .search({
-                    index: 'users_search',
-                    compound: {
-                        should: [
-                            {
-                                autocomplete: {
-                                    path: 'username',
-                                    query: search,
-                                    tokenOrder: 'any',
-                                    fuzzy: {
-                                        maxEdits: 2,
-                                        prefixLength: 1,
-                                        maxExpansions: 256,
-                                    },
-                                },
+        documentsToSkip = 2,
+        limitOfDocuments = 4,
+    ): Promise<{ result: UserEntity[]; count: number }> {
+        //Rewrite using facet pipeline
+        const query = this.userModel
+            .aggregate()
+            .search({
+                index: 'users_search',
+                compound: {
+                    should: [
+                        {
+                            autocomplete: {
+                                path: 'username',
+                                query: search,
+                                tokenOrder: 'any',
                             },
-                            {
-                                autocomplete: {
-                                    path: 'firstname',
-                                    query: search,
-                                    tokenOrder: 'any',
-                                    fuzzy: {
-                                        maxEdits: 2,
-                                        prefixLength: 1,
-                                        maxExpansions: 256,
-                                    },
-                                },
+                        },
+                        {
+                            autocomplete: {
+                                path: 'firstname',
+                                query: search,
+                                tokenOrder: 'any',
                             },
-                            {
-                                autocomplete: {
-                                    path: 'lastname',
-                                    query: search,
-                                    tokenOrder: 'any',
-                                    fuzzy: {
-                                        maxEdits: 2,
-                                        prefixLength: 1,
-                                        maxExpansions: 256,
-                                    },
-                                },
+                        },
+                        {
+                            autocomplete: {
+                                path: 'lastname',
+                                query: search,
+                                tokenOrder: 'any',
                             },
-                        ],
-                    },
-                })
-                .match({
-                    isVisible: true,
-                })
-            const count = (await query).length
-            query
-                .sort({ _id: 1 })
-                .skip(Number(documentsToSkip))
-                .project({
-                    _id: { $toString: '$_id' },
-                    username: 1,
-                    firstname: 1,
-                    lastname: 1,
-                    count: 1,
-                })
-            if (limitOfDocuments) {
-                query.limit(limitOfDocuments)
-            }
-            const result = await query
+                        },
+                    ],
+                },
+            })
+            .match({
+                isVisible: true,
+            })
+        const count = (await query).length
+        query
+            .sort({ _id: 1 })
+            .skip(documentsToSkip)
+            .limit(limitOfDocuments)
+            .project({
+                username: 1,
+                firstname: 1,
+                lastname: 1,
+            })
 
-            return { result, count }
-        } catch (err) {
-            console.log(err)
-        }
+        const result = (await query).map((u) => new UserEntity(u))
+        return { result, count }
     }
 
-    async getUser(username: string) {
-        const user = await this.userModel.findOne({ username }).exec()
-        if (!user) throw new NotFoundException()
-        return user
+    async getUser(username: string): Promise<UserEntity> {
+        const user = await this.userModel.findOne({ username }).lean()
+        console.log(user)
+        if (!user) throw new NotFoundException('User not found')
+        return new UserEntity(user)
     }
     async createUser(userData: CreateUserDto) {
         const salt = bcrypt.genSaltSync()

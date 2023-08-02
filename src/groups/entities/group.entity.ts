@@ -1,11 +1,12 @@
 import { Type } from 'class-transformer'
 import { BaseEntity } from 'src/common/entities/base.entity'
+import { PublicUserEntity } from 'src/common/entities/public-user-entity'
 import { User } from 'src/common/schemas/user.schema'
 import { UserEntity } from 'src/users/entities/user.entity'
 class Roles {
-    @Type(() => UserEntity)
+    @Type(() => PublicUserEntity)
     administrator: User
-    @Type(() => UserEntity)
+    @Type(() => PublicUserEntity)
     moderators: User[]
 }
 
@@ -15,6 +16,7 @@ export class GroupEntity extends BaseEntity {
     participants: User[]
     tags: string[]
     description: string
+    @Type(() => Roles)
     roles: Roles
     constructor(partial: Partial<GroupEntity>) {
         super()

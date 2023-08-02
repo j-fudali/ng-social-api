@@ -1,7 +1,7 @@
 import { Exclude } from 'class-transformer'
 import { Types } from 'mongoose'
 
-export class ReactionsNumber {
+export class ReactionsNumberEntity {
     likesNumber: number
     dislikesNumber: number
     @Exclude()

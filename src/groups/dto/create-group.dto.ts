@@ -11,6 +11,7 @@ import {
 export class CreateGroupDto {
     @IsNotEmpty()
     @IsString()
+    @MaxLength(150)
     name: string
     @IsOptional()
     @IsArray()
