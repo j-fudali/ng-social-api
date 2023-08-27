@@ -10,6 +10,7 @@ import {
     UseGuards,
     UseInterceptors,
     ClassSerializerInterceptor,
+    Query,
 } from '@nestjs/common'
 import { ReactionsService } from './reactions.service'
 import { CreateReactionDto } from './dto/create-reaction.dto'
@@ -18,6 +19,8 @@ import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { ReactionEntity } from './entities/reaction.entity'
 import { GetRelatedReactions } from './dto/get-related-reactions.dto'
 import { IsUserReactionAuthorGuard } from './guards/is-user-reaction-author.guard'
+import { PaginationParams } from 'src/common/dto/pagination-params.dto'
+import { MongoIdParamPipe } from 'src/common/pipes/mongo-id-param.pipe'
 
 @Controller('reactions')
 export class ReactionsController {
@@ -29,17 +32,21 @@ export class ReactionsController {
         return this.reactionsService.create(req.user.userId, createReactionDto)
     }
 
-    @Get()
+    @Get('posts/:postId')
     @UseInterceptors(ClassSerializerInterceptor)
-    async findAllRelatedReactions(
-        @Body() getRelatedReactions: GetRelatedReactions,
+    async findAllByPost(
+        @Param('postId', MongoIdParamPipe) postId: string,
+        @Query() { page, limit }: PaginationParams,
     ) {
-        return (
-            await this.reactionsService.findAllRelatedReactions(
-                getRelatedReactions.relatedTo,
-                getRelatedReactions.relatedPlaceId,
-            )
-        ).map((reaction) => new ReactionEntity(reaction))
+        this.reactionsService.findAllRelatedByPost(postId, page, limit)
+    }
+    @Get('posts/:postId/comments/:commentId')
+    @UseInterceptors(ClassSerializerInterceptor)
+    async findAllByComment(
+        @Param('commentId', MongoIdParamPipe) commentId: string,
+        @Query() { page, limit }: PaginationParams,
+    ) {
+        this.reactionsService.findAllRelatedByComment(commentId, page, limit)
     }
     @Patch(':id')
     @UseGuards(JwtStrategyGuard, IsUserReactionAuthorGuard)

@@ -19,10 +19,10 @@ import { UpdatePostDto } from './dto/update-post.dto'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { IsUserPostAuthorGuard } from './guards/is-user-post-author.guard'
-import { PaginationParams } from 'src/common/dto/pagination-params'
+import { PaginationParams } from 'src/common/dto/pagination-params.dto'
 import { PostEntity } from './entities/post.entity'
-import { SearchDto } from 'src/comments/dto/search.dto'
 import { MongoIdParamPipe } from 'src/common/pipes/mongo-id-param.pipe'
+import { SearchPost } from './dto/search-post'
 
 @Controller('posts')
 export class PostsController {
@@ -32,6 +32,38 @@ export class PostsController {
     @Post()
     async create(@Request() req, @Body() createPostDto: CreatePostDto) {
         return await this.postsService.create(req.user.userId, createPostDto)
+    }
+
+    @Get()
+    searchAllPublic(
+        @Query() { page, limit }: PaginationParams,
+        @Query() { search }: SearchPost,
+    ): Promise<{ result: PostEntity[]; count: number }> {
+        return this.postsService.searchAllPublic(search, page, limit)
+    }
+    @Get('me')
+    findAllPrivate(@Request() req) {
+        return this.postsService.findAllPrivate(req.user.userId)
+    }
+    @Get(':id')
+    findOne(@Param('id', MongoIdParamPipe) id: string): Promise<PostEntity> {
+        return this.postsService.findOne(id)
+    }
+
+    @Patch(':id')
+    @UseGuards(JwtStrategyGuard, IsUserPostAuthorGuard)
+    async update(
+        @Param('id', MongoIdParamPipe) id: string,
+        @Body() updatePostDto: UpdatePostDto,
+    ) {
+        if (!id) throw new BadRequestException('Post id is not provided')
+        return this.postsService.update(id, updatePostDto)
+    }
+    @Delete(':id')
+    @UseGuards(JwtStrategyGuard, IsUserPostAuthorGuard)
+    async remove(@Param('id', MongoIdParamPipe) id: string) {
+        if (!id) throw new BadRequestException('No post id provided')
+        return await this.postsService.remove(id)
     }
     @Post(':id/upload')
     @UseGuards(JwtStrategyGuard, IsUserPostAuthorGuard)
@@ -52,35 +84,5 @@ export class PostsController {
         if (files.length === 0)
             throw new BadRequestException('Files not provided')
         return await this.postsService.uploadFiles(files, id)
-    }
-    @Get()
-    async findAll(
-        @Query() { skip, limit }: PaginationParams,
-        @Body() body: SearchDto,
-    ): Promise<{ result: PostEntity[]; count: number }> {
-        return this.postsService.findAll(body.search, skip, limit)
-    }
-
-    @Get(':id')
-    async findOne(
-        @Param('id', MongoIdParamPipe) id: string,
-    ): Promise<PostEntity> {
-        return this.postsService.findOne(id)
-    }
-
-    @Patch(':id')
-    @UseGuards(JwtStrategyGuard, IsUserPostAuthorGuard)
-    async update(
-        @Param('id', MongoIdParamPipe) id: string,
-        @Body() updatePostDto: UpdatePostDto,
-    ) {
-        if (!id) throw new BadRequestException('Post id is not provided')
-        return this.postsService.update(id, updatePostDto)
-    }
-    @Delete(':id')
-    @UseGuards(JwtStrategyGuard, IsUserPostAuthorGuard)
-    async remove(@Param('id', MongoIdParamPipe) id: string) {
-        if (!id) throw new BadRequestException('No post id provided')
-        return await this.postsService.remove(id)
     }
 }

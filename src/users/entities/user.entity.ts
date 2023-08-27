@@ -10,6 +10,7 @@ export class UserEntity extends BaseEntity {
     email: string
     birthdate: Date
     phone: string
+    @Exclude()
     isVisible: boolean
     @Exclude()
     password: string

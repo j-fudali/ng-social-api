@@ -1,4 +1,4 @@
-import { Exclude, Expose, Type } from 'class-transformer'
+import { Exclude, Type } from 'class-transformer'
 import { Types } from 'mongoose'
 import { User } from 'src/common/schemas/user.schema'
 import { BaseEntity } from 'src/common/entities/base.entity'
@@ -18,4 +18,3 @@ export class ReactionEntity extends BaseEntity {
         Object.assign(this, partial)
     }
 }
-

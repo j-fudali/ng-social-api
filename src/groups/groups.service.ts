@@ -26,7 +26,7 @@ export class GroupsService {
         }
     }
 
-    async findAll(skip: number, limit: number) {
+    async findAll(page = 0, limit = 4) {
         const query = this.groupModel.find({})
         const result = await query
             .select({
@@ -37,7 +37,7 @@ export class GroupsService {
                 tags: 1,
             })
             .sort({ _id: 1 })
-            .skip(skip)
+            .skip(page * limit)
             .limit(limit)
             .lean()
             .exec()

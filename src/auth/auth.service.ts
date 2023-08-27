@@ -15,7 +15,7 @@ export class AuthService {
         username: string,
         password: string,
     ): Promise<User | null> {
-        const user = await this.usersService.getUser(username)
+        const user = await this.usersService.getUserProfile(username)
         if (user) {
             if (await bcrypt.compare(password, user.password)) {
                 return user
@@ -29,7 +29,9 @@ export class AuthService {
             access_token: this.jwtService.sign(payload),
         }
     }
-    register(userData: CreateUserDto) {
-        return this.usersService.createUser(userData)
+    async register(userData: CreateUserDto) {
+        const user = await this.usersService.createUser(userData)
+        const token = this.login(user)
+        return { message: 'User has been created', ...token }
     }
 }

@@ -30,50 +30,65 @@ export class PostsService {
             await post.save()
             return { postId: post.id, message: 'Post has been created' }
         } catch (error) {
+            console.log(error)
             throw new UnprocessableEntityException('Cannot create new post')
         }
     }
-    async findAll(
+    async findAllByGroup(groupId: string) {
+        return await this.postModel.find({
+            visibility: 'group',
+            group: groupId,
+        })
+    }
+    async findAllPrivate(userId: string) {
+        return await this.postModel
+            .find({ visibility: 'private', 'author._id': userId })
+            .exec()
+    }
+    async searchAllPublic(
         search: string,
-        skip = 0,
+        page = 0,
         limit = 4,
     ): Promise<{ result: PostEntity[]; count: number }> {
         try {
-            const query = this.postModel.aggregate().search({
-                index: 'posts_search',
-                compound: {
-                    should: [
-                        {
-                            autocomplete: {
-                                path: 'title',
-                                query: search,
-                                tokenOrder: 'any',
-                                fuzzy: {
-                                    maxEdits: 2,
-                                    prefixLength: 1,
-                                    maxExpansions: 256,
+            const query = this.postModel
+                .aggregate()
+                .search({
+                    index: 'posts_search',
+                    compound: {
+                        should: [
+                            {
+                                autocomplete: {
+                                    path: 'title',
+                                    query: search,
+                                    tokenOrder: 'any',
+                                    fuzzy: {
+                                        maxEdits: 2,
+                                        prefixLength: 1,
+                                        maxExpansions: 256,
+                                    },
                                 },
                             },
-                        },
-                        {
-                            autocomplete: {
-                                path: 'text',
-                                query: search,
-                                tokenOrder: 'any',
-                                fuzzy: {
-                                    maxEdits: 2,
-                                    prefixLength: 1,
-                                    maxExpansions: 256,
+                            {
+                                autocomplete: {
+                                    path: 'text',
+                                    query: search,
+                                    tokenOrder: 'any',
+                                    fuzzy: {
+                                        maxEdits: 2,
+                                        prefixLength: 1,
+                                        maxExpansions: 256,
+                                    },
                                 },
                             },
-                        },
-                    ],
-                },
-            })
+                        ],
+                    },
+                })
+                .match({ visibility: 'public' })
             const count = (await query).length
             const result = (
                 await query
-                    .skip(skip)
+                    .skip(page * limit)
                     .limit(limit)
                     .lookup({
                         from: 'users',
@@ -92,12 +107,18 @@ export class PostsService {
                     .exec()
             ).map((p) => new PostEntity(p))
             return { result, count }
-        } catch (err) {
-            console.log(err)
+        } catch {
+            throw new UnprocessableEntityException(
+                'Cannot search post by given input',
+            )
         }
     }
     async findOne(id: string): Promise<PostEntity> {
-        const post = await this.postModel.findById(id).populate('author').lean()
+        const post = await this.postModel
+            .findById(id)
+            .where({})
+            .populate('author')
+            .lean()
         if (!post) throw new NotFoundException('Post not found')
         return new PostEntity(post)
     }

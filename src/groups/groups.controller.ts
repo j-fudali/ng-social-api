@@ -18,7 +18,7 @@ import { CreateGroupDto } from './dto/create-group.dto'
 import { UpdateGroupDto } from './dto/update-group.dto'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { GroupEntity } from './entities/group.entity'
-import { PaginationParams } from 'src/common/dto/pagination-params'
+import { PaginationParams } from 'src/common/dto/pagination-params.dto'
 import { IsUserGroupCreatorGuard } from './guards/is-user-group-creator.guard'
 import { MongoIdParamPipe } from 'src/common/pipes/mongo-id-param.pipe'
 
@@ -33,8 +33,8 @@ export class GroupsController {
     }
 
     @Get()
-    async findAll(@Query() { skip, limit }: PaginationParams) {
-        return this.groupsService.findAll(skip, limit)
+    async findAll(@Query() { page, limit }: PaginationParams) {
+        return this.groupsService.findAll(page, limit)
     }
 
     @Get(':id')

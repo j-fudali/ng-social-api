@@ -1,5 +1,6 @@
 import {
     IsArray,
+    IsEnum,
     IsIn,
     IsMongoId,
     IsNotEmpty,
@@ -20,8 +21,8 @@ export class CreatePostDto {
     @IsNotEmpty()
     @IsString()
     @IsIn(['public', 'private', 'group'])
-    membership: string
-    @ValidateIf((o) => o.membership === 'group')
+    visibility: string
+    @ValidateIf((o) => o.visibility === 'group')
     @IsNotEmpty()
     @IsMongoId()
     group: string

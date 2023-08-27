@@ -10,16 +10,17 @@ import * as bcrypt from 'bcrypt'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UserEntity } from './entities/user.entity'
+import { PublicUserEntity } from 'src/common/entities/public-user-entity'
 
 @Injectable()
 export class UsersService {
     constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
     async getVisibleUsers(
-        search: string,
-        documentsToSkip = 2,
-        limitOfDocuments = 4,
-    ): Promise<{ result: UserEntity[]; count: number }> {
+        search,
+        page = 0,
+        limit = 4,
+    ): Promise<{ result: PublicUserEntity[]; count: number }> {
         //Rewrite using facet pipeline
         const query = this.userModel
             .aggregate()
@@ -57,21 +58,30 @@ export class UsersService {
         const count = (await query).length
         query
             .sort({ _id: 1 })
-            .skip(documentsToSkip)
-            .limit(limitOfDocuments)
+            .skip(page * limit)
+            .limit(limit)
             .project({
                 username: 1,
                 firstname: 1,
                 lastname: 1,
             })
 
-        const result = (await query).map((u) => new UserEntity(u))
+        const result = (await query).map((u) => new PublicUserEntity(u))
         return { result, count }
     }
 
-    async getUser(username: string): Promise<UserEntity> {
-        const user = await this.userModel.findOne({ username }).lean()
-        console.log(user)
+    async getUserByUsername(username: string): Promise<PublicUserEntity> {
+        const user = await this.userModel.findOne({ username }).lean().exec()
+        if (!user) throw new NotFoundException('User not found')
+        return new PublicUserEntity(user)
+    }
+    async getUserByEmail(email: string): Promise<PublicUserEntity> {
+        const user = await this.userModel.findOne({ email }).lean().exec()
+        if (!user) throw new NotFoundException('User not found')
+        return new PublicUserEntity(user)
+    }
+    async getUserProfile(username: string): Promise<UserEntity> {
+        const user = await this.userModel.findOne({ username }).lean().exec()
         if (!user) throw new NotFoundException('User not found')
         return new UserEntity(user)
     }
@@ -79,14 +89,14 @@ export class UsersService {
         const salt = bcrypt.genSaltSync()
         const { password, ...rest } = userData
         const hashPassword = bcrypt.hashSync(password, salt)
-        const req = new this.userModel({
+        const user = new this.userModel({
             ...rest,
             password: hashPassword,
             hash: salt,
         })
-        if (!req) throw new BadRequestException()
-        await req.save()
-        return { message: 'User has been created' }
+        if (!user) throw new BadRequestException()
+        await user.save()
+        return user
     }
 
     async updateUser(id: string, userData: UpdateUserDto) {

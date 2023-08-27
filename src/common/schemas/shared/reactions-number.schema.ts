@@ -1,6 +1,6 @@
 import { Prop, Schema } from '@nestjs/mongoose'
 
-@Schema()
+@Schema({ _id: false })
 export class ReactionsNumber {
     @Prop({ default: 0 })
     likesNumber: number

@@ -10,6 +10,7 @@ import { Reaction } from 'src/common/schemas/reaction.schema'
 import { Model } from 'mongoose'
 import { Post } from 'src/common/schemas/post.schema'
 import { Comment } from 'src/common/schemas/comment.schema'
+import { ReactionEntity } from './entities/reaction.entity'
 @Injectable()
 export class ReactionsService {
     constructor(
@@ -48,18 +49,30 @@ export class ReactionsService {
         }
         return { message: 'Reaction added' }
     }
-    async findAllRelatedReactions(relatedTo: string, id: string) {
-        const reaction = await this.reactionModel
+    findAllRelatedByPost(id: string, page: number, limit: number) {
+        return this.findAllRelated('Post', id, page, limit)
+    }
+    findAllRelatedByComment(id: string, page: number, limit: number) {
+        return this.findAllRelated('Comment', id, page, limit)
+    }
+    private async findAllRelated(
+        relatedTo: string,
+        relatedToId: string,
+        page = 0,
+        limit = 4,
+    ) {
+        const reactions = await this.reactionModel
             .find({
-                reactionPlaceId: id,
+                reactionPlaceId: relatedToId,
                 reactionFor: relatedTo,
             })
             .populate('author')
+            .skip(page * limit)
+            .limit(limit)
             .lean()
             .exec()
-        return reaction
+        return reactions.map((r) => new ReactionEntity(r))
     }
-
     async update(id: string, updateReactionDto: UpdateReactionDto) {
         try {
             const reaction = await this.reactionModel.findByIdAndUpdate(

@@ -28,7 +28,7 @@ export class Post {
         required: true,
         enum: ['public', 'private', 'group'],
     })
-    membership: string
+    visibility: string
     @Prop({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Group',
