@@ -33,6 +33,7 @@ import { GroupsModule } from './groups/groups.module'
         MongooseModule.forRoot(process.env.DB_URI, {
             dbName: 'ngSocial',
         }),
+
         UsersModule,
         PostsModule,
         ReactionsModule,

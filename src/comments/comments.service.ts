@@ -13,6 +13,7 @@ import { Post } from 'src/common/schemas/post.schema'
 import { createHash } from 'crypto'
 import * as fs from 'fs'
 import { Reaction } from 'src/common/schemas/reaction.schema'
+import { CommentEntity, SingleCommentEntity } from './entities/comment.entity'
 @Injectable()
 export class CommentsService {
     constructor(
@@ -42,7 +43,7 @@ export class CommentsService {
                 .populate('author')
                 .lean()
                 .exec()
-            return req
+            return req.map((c) => new CommentEntity(c))
         } catch (error) {
             throw new BadRequestException('Bad data provided')
         }
@@ -54,7 +55,7 @@ export class CommentsService {
             .populate('author')
             .lean()
         if (!req) throw new NotFoundException('Comment not found')
-        return req
+        return new SingleCommentEntity(req)
     }
 
     async remove(id: string) {

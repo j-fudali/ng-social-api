@@ -45,10 +45,12 @@ export class PostsService {
             .find({ visibility: 'private', 'author._id': userId })
             .exec()
     }
-    async searchAllPublic(
+    async search(
         search: string,
-        page = 0,
+        page = 1,
         limit = 4,
+        visibility: string,
+        groupId?: string,
     ): Promise<{ result: PostEntity[]; count: number }> {
         try {
             const query = this.postModel
@@ -84,11 +86,11 @@ export class PostsService {
                         ],
                     },
                 })
-                .match({ visibility: 'public' })
+                .match({ visibility: visibility, groupId: groupId || null })
             const count = (await query).length
             const result = (
                 await query
-                    .skip(page * limit)
+                    .skip((page - 1) * limit)
                     .limit(limit)
                     .lookup({
                         from: 'users',
@@ -112,6 +114,20 @@ export class PostsService {
                 'Cannot search post by given input',
             )
         }
+    }
+    async findAllPublic(page = 1, limit = 4) {
+        const result = (
+            await this.postModel
+                .find({ visibility: 'public' })
+                .sort({ _id: 1 })
+                .limit(limit)
+                .skip((page - 1) * limit)
+                .populate('author')
+                .lean()
+                .exec()
+        ).map((p) => new PostEntity(p))
+        const count = await this.postModel.count({ visibility: 'public' })
+        return { result, count }
     }
     async findOne(id: string): Promise<PostEntity> {
         const post = await this.postModel

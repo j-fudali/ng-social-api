@@ -1,4 +1,12 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator'
+import { Transform, Type } from 'class-transformer'
+import {
+    IsBoolean,
+    IsDate,
+    IsDateString,
+    IsEmail,
+    IsNotEmpty,
+    IsPhoneNumber,
+} from 'class-validator'
 
 export class CreateUserDto {
     @IsNotEmpty()
@@ -11,6 +19,7 @@ export class CreateUserDto {
     @IsEmail()
     email: string
     @IsNotEmpty()
+    @Type(() => Date)
     birthdate: Date
     @IsNotEmpty()
     password: string

@@ -33,13 +33,22 @@ export class PostsController {
     async create(@Request() req, @Body() createPostDto: CreatePostDto) {
         return await this.postsService.create(req.user.userId, createPostDto)
     }
-
     @Get()
-    searchAllPublic(
+    findAllPublic(@Query() { page, limit }: PaginationParams) {
+        return this.postsService.findAllPublic(page, limit)
+    }
+    @Get('search')
+    search(
         @Query() { page, limit }: PaginationParams,
-        @Query() { search }: SearchPost,
+        @Query() { search, visibility, groupId }: SearchPost,
     ): Promise<{ result: PostEntity[]; count: number }> {
-        return this.postsService.searchAllPublic(search, page, limit)
+        return this.postsService.search(
+            search,
+            page,
+            limit,
+            visibility,
+            groupId,
+        )
     }
     @Get('me')
     findAllPrivate(@Request() req) {

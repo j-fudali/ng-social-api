@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer'
+import { Exclude, Expose, Transform, Type } from 'class-transformer'
 import { BaseEntity } from 'src/common/entities/base.entity'
 import { FileEntity } from 'src/common/entities/file.entity'
 import { PublicUserEntity } from 'src/common/entities/public-user-entity'
@@ -19,9 +19,12 @@ export class PostEntity extends BaseEntity {
     categories: string[]
     @Type(() => ReactionsNumberEntity)
     reactionsNumber: ReactionsNumber
+    @Exclude()
     visibility: string
     @Type(() => GroupEntity)
     group: Group
+    @Exclude()
+    updatedAt: Date
     constructor(partial: Partial<PostEntity>) {
         super()
         Object.assign(this, partial)

@@ -7,12 +7,12 @@ import {
     Param,
     Delete,
     UseInterceptors,
-    UploadedFiles,
     UploadedFile,
     ParseFilePipeBuilder,
     Request,
     UseGuards,
     ClassSerializerInterceptor,
+    Query,
 } from '@nestjs/common'
 import { CommentsService } from './comments.service'
 import { CreateCommentDto } from './dto/create-comment.dto'
@@ -20,7 +20,6 @@ import { UpdateCommentDto } from './dto/update-comment.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { GetCommentsRelatedToPostDto } from './dto/get-comments-related-to-post.dto'
-import { CommentEntity, SingleCommentEntity } from './entities/comment.entity'
 import { IsUserCommentAuthorGuard } from './guards/is-user-comment-author.guard'
 @Controller('comments')
 export class CommentsController {
@@ -34,26 +33,22 @@ export class CommentsController {
 
     @Get()
     @UseInterceptors(ClassSerializerInterceptor)
-    async getCommentsRelatedToPost(
-        @Body() getCommentsRelatedToPost: GetCommentsRelatedToPostDto,
+    getCommentsRelatedToPost(
+        @Query() getCommentsRelatedToPost: GetCommentsRelatedToPostDto,
     ) {
-        return (
-            await this.commentsService.findAllRelatedToPost(
-                getCommentsRelatedToPost.postId,
-            )
-        ).map((comment) => new CommentEntity(comment))
+        return this.commentsService.findAllRelatedToPost(
+            getCommentsRelatedToPost.postId,
+        )
     }
 
     @Patch(':id')
     @UseInterceptors(ClassSerializerInterceptor)
     @UseGuards(JwtStrategyGuard, IsUserCommentAuthorGuard)
-    async update(
+    update(
         @Param('id') id: string,
         @Body() updateCommentDto: UpdateCommentDto,
     ) {
-        return new SingleCommentEntity(
-            await this.commentsService.update(id, updateCommentDto),
-        )
+        return this.commentsService.update(id, updateCommentDto)
     }
 
     @Delete(':id')
