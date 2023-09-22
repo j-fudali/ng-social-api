@@ -18,13 +18,8 @@ export class IsUserReactionAuthorGuard implements CanActivate {
         const request = context.switchToHttp().getRequest()
         const paramId = request.params.id
         const userId = request.user.userId
-        try {
-            const req = await this.reactionModel.findById(paramId)
-            if (!req) throw new NotFoundException('Reaction not found')
-            return req.author.toString() === userId ? true : false
-        } catch (error) {
-            throw new BadRequestException('Invalid data provided')
-        }
+        const req = await this.reactionModel.findById(paramId)
+        if (!req) throw new NotFoundException('Reaction not found')
+        return req.author.toString() === userId ? true : false
     }
 }
-

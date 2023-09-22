@@ -1,4 +1,4 @@
-import { Exclude, Transform } from 'class-transformer'
+import { Exclude, Transform, Type } from 'class-transformer'
 import { Types } from 'mongoose'
 
 export class BaseEntity {
@@ -6,6 +6,6 @@ export class BaseEntity {
     updatedAt: Date
     @Exclude()
     __v: number
-    @Transform(({ value }) => value.toString())
+    @Type(() => String)
     _id: Types.ObjectId
 }

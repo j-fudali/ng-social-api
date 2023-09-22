@@ -1,7 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types'
-import { CreateReactionDto } from './create-reaction.dto'
+import { IsIn, IsNotEmpty } from 'class-validator'
 
-export class UpdateReactionDto extends PartialType(CreateReactionDto) {
-    reaction?: string
+export class UpdateReactionDto {
+    @IsNotEmpty()
+    @IsIn(['like', 'dislike'])
+    reaction: string
 }
-

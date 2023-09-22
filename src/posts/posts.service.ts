@@ -8,18 +8,23 @@ import { CreatePostDto } from './dto/create-post.dto'
 import { UpdatePostDto } from './dto/update-post.dto'
 import { InjectModel } from '@nestjs/mongoose'
 import { Post } from 'src/common/schemas/post.schema'
-import { Model } from 'mongoose'
+import mongoose, { Model } from 'mongoose'
 import { Reaction } from 'src/common/schemas/reaction.schema'
 import { Comment } from 'src/common/schemas/comment.schema'
 import { createHash } from 'crypto'
 import * as fs from 'fs'
 import { PostEntity } from './entities/post.entity'
+import { CreateReactionDto } from 'src/reactions/dto/create-reaction.dto'
+import { ReactionsService } from 'src/reactions/reactions.service'
+import { UpdateReactionDto } from 'src/reactions/dto/update-reaction.dto'
+import { ReactionEntity } from 'src/reactions/entities/reaction.entity'
 @Injectable()
 export class PostsService {
     constructor(
         @InjectModel(Post.name) private postModel: Model<Post>,
         @InjectModel(Reaction.name) private reactionModel: Model<Reaction>,
         @InjectModel(Comment.name) private commentModel: Model<Comment>,
+        private reactionsService: ReactionsService,
     ) {}
     async create(userId: string, createPostDto: CreatePostDto) {
         try {
@@ -30,7 +35,6 @@ export class PostsService {
             await post.save()
             return { postId: post.id, message: 'Post has been created' }
         } catch (error) {
-            console.log(error)
             throw new UnprocessableEntityException('Cannot create new post')
         }
     }
@@ -119,10 +123,14 @@ export class PostsService {
         const result = (
             await this.postModel
                 .find({ visibility: 'public' })
-                .sort({ _id: 1 })
+                .sort({ _id: -1 })
                 .limit(limit)
                 .skip((page - 1) * limit)
-                .populate('author')
+                .populate(['author', 'reactions'])
+                .populate({
+                    path: 'reactions',
+                    populate: { path: 'author', model: 'User' },
+                })
                 .lean()
                 .exec()
         ).map((p) => new PostEntity(p))
@@ -157,6 +165,24 @@ export class PostsService {
             post: deletedPost.id,
         })
         return { message: 'Post has been deleted' }
+    }
+    async addReaction(
+        userId: string,
+        postId: string,
+        createReactionDto: CreateReactionDto,
+    ) {
+        const post = await this.postModel.findById(postId).populate('reactions')
+        if (post.reactions.length > 0)
+            if (post.reactions.find((r) => r.author.toString() == userId))
+                throw new ConflictException('Reaction already exists')
+        const reaction = await this.reactionsService.create(
+            userId,
+            createReactionDto,
+        )
+        post.reactions.push(reaction)
+
+        await post.save()
+        return new ReactionEntity((await reaction.populate('author')).toJSON())
     }
     async uploadFiles(files: Array<Express.Multer.File>, documentId: string) {
         for (const file of files) {

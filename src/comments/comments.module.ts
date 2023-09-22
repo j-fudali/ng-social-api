@@ -7,6 +7,7 @@ import { MulterModule } from '@nestjs/platform-express'
 import { memoryStorage } from 'multer'
 import { Post, PostSchema } from 'src/common/schemas/post.schema'
 import { Reaction, ReactionSchema } from 'src/common/schemas/reaction.schema'
+import { ReactionsModule } from 'src/reactions/reactions.module'
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { Reaction, ReactionSchema } from 'src/common/schemas/reaction.schema'
             { name: Post.name, schema: PostSchema },
             { name: Reaction.name, schema: ReactionSchema },
         ]),
+        ReactionsModule,
     ],
     controllers: [CommentsController],
     providers: [CommentsService],

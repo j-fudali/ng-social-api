@@ -21,19 +21,14 @@ import { GroupsModule } from './groups/groups.module'
             provide: APP_FILTER,
             useClass: MongooseErrorsFilter,
         },
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: ClassSerializerInterceptor,
-        },
     ],
     imports: [
-        AuthModule,
-        GroupsModule,
         ConfigModule.forRoot(),
         MongooseModule.forRoot(process.env.DB_URI, {
             dbName: 'ngSocial',
         }),
-
+        AuthModule,
+        GroupsModule,
         UsersModule,
         PostsModule,
         ReactionsModule,

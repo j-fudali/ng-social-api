@@ -12,6 +12,7 @@ import {
     UseGuards,
     Request,
     Query,
+    Req,
 } from '@nestjs/common'
 import { PostsService } from './posts.service'
 import { CreatePostDto } from './dto/create-post.dto'
@@ -23,13 +24,16 @@ import { PaginationParams } from 'src/common/dto/pagination-params.dto'
 import { PostEntity } from './entities/post.entity'
 import { MongoIdParamPipe } from 'src/common/pipes/mongo-id-param.pipe'
 import { SearchPost } from './dto/search-post'
+import { CreateReactionDto } from 'src/reactions/dto/create-reaction.dto'
+import { IsUserReactionAuthorGuard } from 'src/reactions/guards/is-user-reaction-author.guard'
+import { UpdateReactionDto } from 'src/reactions/dto/update-reaction.dto'
 
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
 
-    @UseGuards(JwtStrategyGuard)
     @Post()
+    @UseGuards(JwtStrategyGuard)
     async create(@Request() req, @Body() createPostDto: CreatePostDto) {
         return await this.postsService.create(req.user.userId, createPostDto)
     }
@@ -83,7 +87,7 @@ export class PostsController {
             },
         }),
     )
-    async upload(
+    upload(
         @UploadedFiles() files: Array<Express.Multer.File>,
         @Param('id', MongoIdParamPipe) id: string,
     ) {
@@ -92,6 +96,19 @@ export class PostsController {
         }
         if (files.length === 0)
             throw new BadRequestException('Files not provided')
-        return await this.postsService.uploadFiles(files, id)
+        return this.postsService.uploadFiles(files, id)
+    }
+    @Post(':id/reactions')
+    @UseGuards(JwtStrategyGuard)
+    addReaction(
+        @Req() req,
+        @Param('id', MongoIdParamPipe) id: string,
+        @Body() createReactionDto: CreateReactionDto,
+    ) {
+        return this.postsService.addReaction(
+            req.user.userId,
+            id,
+            createReactionDto,
+        )
     }
 }

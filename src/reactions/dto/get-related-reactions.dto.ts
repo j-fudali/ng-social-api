@@ -5,6 +5,6 @@ export class GetRelatedReactions {
     @IsMongoId()
     relatedPlaceId: string
     @IsNotEmpty()
-    @IsEnum({ Post: 'Post', Comment: 'Comment' })
+    @IsEnum(['Post', 'Comment'])
     relatedTo: string
 }

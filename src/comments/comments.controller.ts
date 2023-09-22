@@ -13,6 +13,7 @@ import {
     UseGuards,
     ClassSerializerInterceptor,
     Query,
+    Req,
 } from '@nestjs/common'
 import { CommentsService } from './comments.service'
 import { CreateCommentDto } from './dto/create-comment.dto'
@@ -21,6 +22,8 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
 import { GetCommentsRelatedToPostDto } from './dto/get-comments-related-to-post.dto'
 import { IsUserCommentAuthorGuard } from './guards/is-user-comment-author.guard'
+import { MongoIdParamPipe } from 'src/common/pipes/mongo-id-param.pipe'
+import { CreateReactionDto } from 'src/reactions/dto/create-reaction.dto'
 @Controller('comments')
 export class CommentsController {
     constructor(private readonly commentsService: CommentsService) {}
@@ -75,5 +78,19 @@ export class CommentsController {
         image: Express.Multer.File,
     ) {
         return this.commentsService.uploadImage(image, id)
+    }
+
+    @Post(':id/reactions')
+    @UseGuards(JwtStrategyGuard)
+    addReaction(
+        @Req() req,
+        @Param('id', MongoIdParamPipe) id: string,
+        @Body() createReactionDto: CreateReactionDto,
+    ) {
+        return this.commentsService.addReaction(
+            req.user.userId,
+            id,
+            createReactionDto,
+        )
     }
 }

@@ -6,6 +6,5 @@ export class CreateCommentDto {
     text: string
     @IsNotEmpty()
     @IsMongoId()
-    post: string
+    postId: string
 }
-

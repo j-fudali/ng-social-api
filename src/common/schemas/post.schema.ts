@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { HydratedDocument } from 'mongoose'
 import { User } from './user.schema'
-import { ReactionsNumber } from './shared/reactions-number.schema'
 import { File } from './shared/file.schema'
 import { Group } from './group.schema'
+import { Reaction } from './reaction.schema'
 
 export type PostDocument = HydratedDocument<Post>
 
@@ -20,10 +20,15 @@ export class Post {
     @Prop({ type: [String] })
     categories: string[]
     @Prop({
-        type: ReactionsNumber,
-        default: {},
+        type: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Reaction',
+            },
+        ],
+        default: [],
     })
-    reactionsNumber: ReactionsNumber
+    reactions: Reaction[]
     @Prop({
         required: true,
         enum: ['public', 'private', 'group'],

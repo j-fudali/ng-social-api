@@ -14,24 +14,29 @@ import { createHash } from 'crypto'
 import * as fs from 'fs'
 import { Reaction } from 'src/common/schemas/reaction.schema'
 import { CommentEntity, SingleCommentEntity } from './entities/comment.entity'
+import { CreateReactionDto } from 'src/reactions/dto/create-reaction.dto'
+import { ReactionsService } from 'src/reactions/reactions.service'
 @Injectable()
 export class CommentsService {
     constructor(
         @InjectModel(Comment.name) private commentModel: Model<Comment>,
         @InjectModel(Post.name) private postModel: Model<Post>,
         @InjectModel(Reaction.name) private reactionModel: Model<Reaction>,
+        private reactionsService: ReactionsService,
     ) {}
     async create(userId: string, createCommentDto: CreateCommentDto) {
-        const post = await this.postModel.findById(createCommentDto.post)
-        if (!post) throw new NotFoundException("Referenced post doesn't exist")
+        const post = await this.postModel.findById(createCommentDto.postId)
+        if (!post) throw new NotFoundException('Post does not exist')
         try {
             const req = new this.commentModel({
                 author: userId,
-                ...createCommentDto,
+                text: createCommentDto.text,
+                post: createCommentDto.postId,
             })
             const comment = await req.save()
             return { message: 'Comment created', commentId: comment.id }
         } catch (error) {
+            console.log(error)
             throw new BadRequestException()
         }
     }
@@ -40,7 +45,11 @@ export class CommentsService {
         try {
             const req = await this.commentModel
                 .find({ post: postId })
-                .populate('author')
+                .populate(['author', 'reactions'])
+                .populate({
+                    path: 'reactions',
+                    populate: { path: 'author', model: 'User' },
+                })
                 .lean()
                 .exec()
             return req.map((c) => new CommentEntity(c))
@@ -111,5 +120,24 @@ export class CommentsService {
         } catch (error) {
             throw new NotFoundException('Comment not found')
         }
+    }
+    async addReaction(
+        userId: string,
+        commentId: string,
+        createReactionDto: CreateReactionDto,
+    ) {
+        const comment = await this.commentModel
+            .findById(commentId)
+            .populate('reactions')
+        if (comment.reactions.length > 0)
+            if (comment.reactions.find((r) => r.author.toString() == userId))
+                throw new ConflictException('Reaction already exists')
+        const reaction = await this.reactionsService.create(
+            userId,
+            createReactionDto,
+        )
+        comment.reactions.push(reaction)
+        await comment.save()
+        return reaction
     }
 }

@@ -5,13 +5,15 @@ import { FileEntity } from 'src/common/entities/file.entity'
 import { PublicUserEntity } from 'src/common/entities/public-user-entity'
 import { ReactionsNumberEntity } from 'src/common/entities/reactions-number.entity'
 import { Post } from 'src/common/schemas/post.schema'
+import { Reaction } from 'src/common/schemas/reaction.schema'
 import { File } from 'src/common/schemas/shared/file.schema'
 import { User } from 'src/common/schemas/user.schema'
+import { ReactionEntity } from 'src/reactions/entities/reaction.entity'
 
 export class CommentEntity extends BaseEntity {
     text: string
-    @Type(() => ReactionsNumberEntity)
-    reactionsNumber: ReactionsNumberEntity
+    @Type(() => ReactionEntity)
+    reactions: Reaction[]
     @Type(() => PublicUserEntity)
     author: User
     @Exclude()
