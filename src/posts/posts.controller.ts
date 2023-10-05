@@ -25,8 +25,6 @@ import { PostEntity } from './entities/post.entity'
 import { MongoIdParamPipe } from 'src/common/pipes/mongo-id-param.pipe'
 import { SearchPost } from './dto/search-post'
 import { CreateReactionDto } from 'src/reactions/dto/create-reaction.dto'
-import { IsUserReactionAuthorGuard } from 'src/reactions/guards/is-user-reaction-author.guard'
-import { UpdateReactionDto } from 'src/reactions/dto/update-reaction.dto'
 
 @Controller('posts')
 export class PostsController {
@@ -38,22 +36,21 @@ export class PostsController {
         return await this.postsService.create(req.user.userId, createPostDto)
     }
     @Get()
-    findAllPublic(@Query() { page, limit }: PaginationParams) {
-        return this.postsService.findAllPublic(page, limit)
-    }
-    @Get('search')
-    search(
+    findAllPublic(
         @Query() { page, limit }: PaginationParams,
         @Query() { search, visibility, groupId }: SearchPost,
-    ): Promise<{ result: PostEntity[]; count: number }> {
-        return this.postsService.search(
-            search,
-            page,
-            limit,
-            visibility,
-            groupId,
-        )
+    ) {
+        if (search)
+            return this.postsService.search(
+                search,
+                page,
+                limit,
+                visibility,
+                groupId,
+            )
+        return this.postsService.findAllPublic(page, limit)
     }
+
     @Get('me')
     findAllPrivate(@Request() req) {
         return this.postsService.findAllPrivate(req.user.userId)

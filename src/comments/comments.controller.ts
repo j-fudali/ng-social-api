@@ -20,7 +20,6 @@ import { CreateCommentDto } from './dto/create-comment.dto'
 import { UpdateCommentDto } from './dto/update-comment.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { JwtStrategyGuard } from 'src/auth/guards/jwt-auth.guard'
-import { GetCommentsRelatedToPostDto } from './dto/get-comments-related-to-post.dto'
 import { IsUserCommentAuthorGuard } from './guards/is-user-comment-author.guard'
 import { MongoIdParamPipe } from 'src/common/pipes/mongo-id-param.pipe'
 import { CreateReactionDto } from 'src/reactions/dto/create-reaction.dto'
@@ -37,11 +36,9 @@ export class CommentsController {
     @Get()
     @UseInterceptors(ClassSerializerInterceptor)
     getCommentsRelatedToPost(
-        @Query() getCommentsRelatedToPost: GetCommentsRelatedToPostDto,
+        @Query('postId', MongoIdParamPipe) postId: string,
     ) {
-        return this.commentsService.findAllRelatedToPost(
-            getCommentsRelatedToPost.postId,
-        )
+        return this.commentsService.findAllRelatedToPost(postId)
     }
 
     @Patch(':id')

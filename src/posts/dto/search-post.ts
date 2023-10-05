@@ -14,9 +14,11 @@ export class SearchPost {
     @IsString()
     @MinLength(1)
     search: string
+    @IsOptional()
     @IsNotEmpty()
     @IsEnum(['public', 'private', 'group'])
     visibility: string
+    @IsOptional()
     @ValidateIf(({ visibility }) => visibility === 'group')
     @IsNotEmpty()
     @IsMongoId()

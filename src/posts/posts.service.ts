@@ -33,7 +33,9 @@ export class PostsService {
                 author: userId,
             })
             await post.save()
-            return { postId: post.id, message: 'Post has been created' }
+            return new PostEntity(
+                (await post.populate(['author', 'reactions'])).toJSON(),
+            )
         } catch (error) {
             throw new UnprocessableEntityException('Cannot create new post')
         }
@@ -52,12 +54,12 @@ export class PostsService {
     async search(
         search: string,
         page = 1,
-        limit = 4,
+        limit = 10,
         visibility: string,
         groupId?: string,
     ): Promise<{ result: PostEntity[]; count: number }> {
         try {
-            const query = this.postModel
+            let query = this.postModel
                 .aggregate()
                 .search({
                     index: 'posts_search',
@@ -90,28 +92,64 @@ export class PostsService {
                         ],
                     },
                 })
-                .match({ visibility: visibility, groupId: groupId || null })
+                .match({ visibility: visibility })
+            if (groupId) {
+                query = query.match({ group: groupId })
+            }
+            query = query
+                .lookup({
+                    from: 'users',
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'author',
+                })
+                .unwind('$author')
+                .lookup({
+                    from: 'reactions',
+                    localField: 'reactions',
+                    foreignField: '_id',
+                    as: 'reactions',
+                })
+                .unwind({
+                    path: '$reactions',
+                    preserveNullAndEmptyArrays: true,
+                })
+                .lookup({
+                    from: 'users',
+                    localField: 'reactions.author',
+                    foreignField: '_id',
+                    as: 'reactions.author',
+                })
+                .unwind({
+                    path: '$reactions.author',
+                    preserveNullAndEmptyArrays: true,
+                })
+                .group({
+                    _id: '$_id',
+                    title: { $first: '$title' },
+                    text: { $first: '$text' },
+                    author: { $first: '$author' },
+                    files: { $first: '$files' },
+                    categories: { $first: '$categories' },
+                    reactions: { $push: '$reactions' },
+                })
+                .sort({
+                    _id: -1,
+                })
             const count = (await query).length
             const result = (
                 await query
                     .skip((page - 1) * limit)
                     .limit(limit)
-                    .lookup({
-                        from: 'users',
-                        localField: 'author',
-                        foreignField: '_id',
-                        as: 'author',
-                    })
-                    .unwind('$author')
-                    .project({
-                        title: 1,
-                        text: 1,
-                        files: 1,
-                        author: 1,
-                        createdAt: 1,
-                    })
                     .exec()
-            ).map((p) => new PostEntity(p))
+            ).map(
+                (p) =>
+                    new PostEntity(
+                        Object.keys(p.reactions[0]).length == 0
+                            ? { ...p, reactions: [] }
+                            : p,
+                    ),
+            )
             return { result, count }
         } catch {
             throw new UnprocessableEntityException(
@@ -119,7 +157,7 @@ export class PostsService {
             )
         }
     }
-    async findAllPublic(page = 1, limit = 4) {
+    async findAllPublic(page = 1, limit = 10) {
         const result = (
             await this.postModel
                 .find({ visibility: 'public' })
@@ -185,6 +223,7 @@ export class PostsService {
         return new ReactionEntity((await reaction.populate('author')).toJSON())
     }
     async uploadFiles(files: Array<Express.Multer.File>, documentId: string) {
+        const urls: { url: string }[] = []
         for (const file of files) {
             const buffer = file.buffer
             const checksum = createHash('sha256').update(buffer).digest('hex')
@@ -217,6 +256,7 @@ export class PostsService {
                     )
                 }
                 fs.writeFileSync(uploadFolder, buffer)
+                urls.push({ url: postFile.url })
                 continue
             }
             const foundedFile = searchedFile[0].files.find(
@@ -231,11 +271,13 @@ export class PostsService {
                         },
                     },
                 })
+                urls.push({ url: foundedFile.url })
             } catch (error) {
                 throw new NotFoundException(
                     `${this.postModel.modelName} not found`,
                 )
             }
         }
+        return urls
     }
 }

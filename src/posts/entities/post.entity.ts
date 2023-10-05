@@ -21,7 +21,6 @@ export class PostEntity extends BaseEntity {
     categories: string[]
     @Type(() => ReactionEntity)
     reactions: Reaction[]
-    @Exclude()
     visibility: string
     @Type(() => GroupEntity)
     group: Group

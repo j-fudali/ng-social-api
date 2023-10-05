@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     Injectable,
     NotFoundException,
     UnprocessableEntityException,
@@ -58,17 +57,16 @@ export class ReactionsService {
         return { result, count }
     }
     async update(id: string, updateReactionDto: UpdateReactionDto) {
-        const updatedReaction = await this.reactionModel.findByIdAndUpdate(
-            id,
-            updateReactionDto,
-        )
+        const updatedReaction = await this.reactionModel
+            .findByIdAndUpdate(id, updateReactionDto, { new: true })
+            .populate('author')
         if (!updatedReaction) throw new NotFoundException('Reaction not found')
-        return { message: 'Reaction changed' }
+        return new ReactionEntity(updatedReaction.toJSON())
     }
 
     async remove(id: string) {
         const deletedReaction = await this.reactionModel.findByIdAndDelete(id)
         if (!deletedReaction) throw new NotFoundException('Reaction not found')
-        return { message: 'Reaction deleted' }
+        return
     }
 }

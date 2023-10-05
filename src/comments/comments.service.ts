@@ -34,25 +34,31 @@ export class CommentsService {
                 post: createCommentDto.postId,
             })
             const comment = await req.save()
-            return { message: 'Comment created', commentId: comment.id }
+            return new CommentEntity(
+                (await comment.populate(['author', 'reactions'])).toJSON(),
+            )
         } catch (error) {
-            console.log(error)
             throw new BadRequestException()
         }
     }
 
-    async findAllRelatedToPost(postId: string) {
+    async findAllRelatedToPost(postId: string, page = 1, limit = 10) {
         try {
-            const req = await this.commentModel
-                .find({ post: postId })
-                .populate(['author', 'reactions'])
-                .populate({
-                    path: 'reactions',
-                    populate: { path: 'author', model: 'User' },
-                })
-                .lean()
-                .exec()
-            return req.map((c) => new CommentEntity(c))
+            const req = (
+                await this.commentModel
+                    .find({ post: postId })
+                    .populate('author')
+                    .populate({
+                        path: 'reactions',
+                        populate: { path: 'author', model: 'User' },
+                    })
+                    .skip((page - 1) * limit)
+                    .limit(limit)
+                    .lean()
+                    .exec()
+            ).map((c) => new CommentEntity(c))
+            const count = await this.commentModel.count({ post: postId })
+            return { result: req, count }
         } catch (error) {
             throw new BadRequestException('Bad data provided')
         }
@@ -89,9 +95,9 @@ export class CommentsService {
         if (!(searchedImage.length > 0)) {
             const filename = `${Date.now()}_${image.originalname}`
             const commentsImagesFolder = './commentsImages'
-            const uploadFolder = `${commentsImagesFolder}/${filename}`
+            const url = `${commentsImagesFolder}/${filename}`
             const imageFile: { url: string; hash: string } = {
-                url: uploadFolder,
+                url,
                 hash: checksum,
             }
             const commentToAddImage = await this.commentModel.findByIdAndUpdate(
@@ -103,8 +109,8 @@ export class CommentsService {
             if (!commentToAddImage) {
                 throw new NotFoundException('Comment not found')
             }
-            fs.writeFileSync(uploadFolder, buffer)
-            return { message: 'Image added to comment' }
+            fs.writeFileSync(url, buffer)
+            return { url }
         }
         const foundedImage = searchedImage[0].image
         try {
